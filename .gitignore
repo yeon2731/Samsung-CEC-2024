@@ -3,5 +3,6 @@
 **/*.png
 **/*.pdf
 **/*.svg
+Phi3*
 .env/
 
