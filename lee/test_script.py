@@ -38,8 +38,7 @@ messages = [
 ]
 output = pipe(messages, **generation_args)
 print(output[0]['generated_text'])
- 
-"""
+
 
 ####### Section 3. Load data and Inference -> Performance evaluation part #######
 start = time.time()
@@ -64,4 +63,3 @@ print("Total_time: ",eend-sstart)
 print("Elapsed_time: ", end-start)
 print(f"Correctness: {correct}/{len(data)}")
 
-"""
