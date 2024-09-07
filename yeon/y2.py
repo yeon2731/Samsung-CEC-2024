@@ -73,11 +73,9 @@ print(dir(model.model))
 layer_output = current_output
 
 # 숨겨진 함수 호출 예시
-# 예를 들어, 'hidden_function'이 'model.model' 내부에 있다고 가정하고 호출합니다.
-# 실제 함수 이름은 위의 `dir()` 출력을 통해 확인해야 합니다.
-if hasattr(model.model, 'hidden_function'):
-    hidden_output = model.model.hidden_function(layer_output)
-    print("숨겨진 함수 출력:", hidden_output)
+# if hasattr(model.model, 'hidden_function'):
+#     hidden_output = model.model.hidden_function(layer_output)
+#     print("숨겨진 함수 출력:", hidden_output)
 
 # norm 레이어 적용
 normalized_output = model.model.norm(hidden_output if 'hidden_output' in locals() else layer_output)
