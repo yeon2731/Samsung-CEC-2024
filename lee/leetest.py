@@ -37,36 +37,48 @@ messages = [
     {"role": "user", "content": "What about solving an 2x + 3 = 7 equation?"},
 ]
 
+input_text = ""
+for message in messages:
+    input_text += f"{message['role']}: {message['content']}\n"
 
-##padding 문제!!!!!
+#input_text="hello, sample text"
 
-max_length = 128
+input_ids_tensor = tokenizer(input_text, return_tensors="pt").input_ids.to(model.device)
+position_ids = torch.arange(input_ids_tensor.size(1), dtype=torch.long, device=input_ids_tensor.device)
+position_ids = position_ids.unsqueeze(0).expand(input_ids_tensor.size(0), -1)
 
-input_ids = [tokenizer(message["content"], return_tensors="pt",padding="max_length", truncation=True,max_length=max_length)["input_ids"] for message in messages]
-
-
-input_ids_tensor = torch.cat(input_ids, dim=0)  # dim=0: 배치 차원에서 텐서들을 합침
 print("input_ids_tensor : ",input_ids_tensor)
-
-position_ids = torch.arange(0, max_length, dtype=torch.long, device=input_ids_tensor.device).unsqueeze(0).expand(input_ids_tensor.size(0), -1)
-
 
 with torch.no_grad():
     x = model.model.embed_tokens(input_ids_tensor)
-    x = model.model.embed_dropout(x)
+    print("임베딩 출력:", x)
 
-    for i in range(40):
-        x = model.model.layers[i](x, position_ids=position_ids)
-        x = x[0]
+    seq_length = input_ids_tensor.size(1)  # 입력 시퀀스의 길이
+    position_ids = torch.arange(seq_length, dtype=torch.long, device=input_ids_tensor.device)
+    position_ids = position_ids.unsqueeze(0).expand(input_ids_tensor.size(0), -1)
 
+    attention_mask = torch.ones(input_ids_tensor.shape, device=input_ids_tensor.device)
+
+    for layer in model.model.layers:
+        x = layer(x, position_ids=position_ids)
+        x = x[0]  # 첫 번째 튜플 요소를 가져옴 (hidden states)
+
+    print("after layers:",x)
+    #print("\n\n\n",dir(model),"\n\n\n")
+    print("m.m.attn:",model.model._attn_implementation)
+    print("m.autoset:",model._autoset_attn_implementation)
+    print("m.m.autoset:",model.model._autoset_attn_implementation)
+    x = model.model._autoset_attn_implementation(x)
+    print("after autoset implementation:",x)
     x = model.model.norm(x)
-    x = model.lm_head(x)
+    print("after norm:",x)
+    logits = model.lm_head(x)
+    print("after lm_head:",logits)
 
-    predicted_token_ids = torch.argmax(x, dim=-1)
-    print("predicted_token_ids : ",predicted_token_ids)
+    predicted_token_ids = torch.argmax(logits, dim=-1)
     decoded_output = tokenizer.decode(predicted_token_ids[0], skip_special_tokens=True)
-
-print(decoded_output)
+    #decoded_output = tokenizer.decode(logits, skip_special_tokens=True)
+print("출력:",decoded_output)
 
 
 #output = pipe(messages, **generation_args)

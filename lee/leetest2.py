@@ -36,10 +36,46 @@ messages = [
     {"role": "assistant", "content": "Sure! Here are some ways to eat bananas and dragonfruits together: 1. Banana and dragonfruit smoothie: Blend bananas and dragonfruits together with some milk and honey. 2. Banana and dragonfruit salad: Mix sliced bananas and dragonfruits together with some lemon juice and honey."},
     {"role": "user", "content": "What about solving an 2x + 3 = 7 equation?"},
 ]
-output = pipe(messages, **generation_args)
-print(output[0]['generated_text'])
+
+input_text = ""
+for message in messages:
+    input_text += f"{message['role']}: {message['content']}\n"
+
+input_ids_tensor = tokenizer(input_text, return_tensors="pt").input_ids.to(model.device)
+position_ids = torch.arange(input_ids_tensor.size(1), dtype=torch.long, device=input_ids_tensor.device)
+position_ids = position_ids.unsqueeze(0).expand(input_ids_tensor.size(0), -1)
+
+print("input_ids_tensor : ",input_ids_tensor)
+
+
+with torch.no_grad():
+    x = model.get_input_embeddings()(input_ids_tensor)
+    x = model.model.embed_dropout(x)
+
+    seq_length = input_ids_tensor.size(1)  # 입력 시퀀스의 길이
+    position_ids = torch.arange(seq_length, dtype=torch.long, device=input_ids_tensor.device)
+    position_ids = position_ids.unsqueeze(0).expand(input_ids_tensor.size(0), -1)
+
+    attention_mask = torch.ones(input_ids_tensor.shape, device=input_ids_tensor.device)
+
+    for layer in model.model.layers:
+        x = layer(x, position_ids=position_ids)
+        x = x[0]  # 첫 번째 튜플 요소를 가져옴 (hidden states)
+
+    x = model.model.norm(x)
+    logits = model.lm_head(x)
+
+    predicted_token_ids = torch.argmax(logits, dim=-1)
+    decoded_output = tokenizer.decode(predicted_token_ids[0], skip_special_tokens=True)
+print(decoded_output)
+
+
+#output = pipe(messages, **generation_args)
+#print(output[0]['generated_text'])
+
 
 """
+
 ####### Section 3. Load data and Inference -> Performance evaluation part #######
 start = time.time()
 data = load_dataset("json", data_files="test_dataset.jsonl")['train']
@@ -62,4 +98,5 @@ print("===== Perf result =====")
 print("Total_time: ",eend-sstart)
 print("Elapsed_time: ", end-start)
 print(f"Correctness: {correct}/{len(data)}")
+
 """

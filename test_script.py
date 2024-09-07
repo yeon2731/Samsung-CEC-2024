@@ -4,8 +4,6 @@ from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from transformers.pipelines.pt_utils import KeyDataset
 
-sstart=time.time()
- 
 ####### Section 1. Set up #######
 torch.random.manual_seed(0)
 model_id = "microsoft/Phi-3-medium-4k-instruct" # please replace with local model path
@@ -55,9 +53,6 @@ for i, out in enumerate(outs):
         correct += 1
     print(answer)
     
-eend=time.time()
- 
 print("===== Perf result =====")
-print("Total_time: ",eend-sstart)
 print("Elapsed_time: ", end-start)
 print(f"Correctness: {correct}/{len(data)}")

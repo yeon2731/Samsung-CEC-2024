@@ -14,3 +14,10 @@ if __name__ == "__main__":
     print("-" * 30)
     for nmod, _ in model.named_children():
         print(nmod)
+
+    print(model.__dir__())
+
+    layers = [
+        getattr(model.layers, f"{i}") for i in range(0, 39)
+    ]
+    print(layers[0])
